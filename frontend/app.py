@@ -265,25 +265,79 @@ with tab4:
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
+    # Helper function to display analysis tables
+    def display_analysis_tables(tables):
+        """Display Table A and Table B in a user-friendly format."""
+        table_a = tables.get("table_a", [])
+        table_b = tables.get("table_b", [])
+        
+        if not table_a and not table_b:
+            return
+        
+        st.markdown("---")
+        st.subheader("📊 Gap Analysis Results")
+        
+        # Table A: Viable Topics
+        if table_a:
+            st.markdown("### ✅ Table A: Syllabus Topics Still Viable in Industry")
+            for i, row in enumerate(table_a, 1):
+                with st.container():
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown(f"**{i}. {row.get('syllabus_topic', 'N/A')}**")
+                        if row.get('example_industry_phrasing'):
+                            st.caption(f"Industry phrasing: {row.get('example_industry_phrasing')}")
+                        if row.get('notes'):
+                            st.caption(f"Note: {row.get('notes')}")
+                    with col2:
+                        score = row.get('industry_relevance_score', 0)
+                        st.metric("Relevance", f"{score}%")
+                        st.caption(f"{row.get('evidence_job_count', 0)} jobs")
+                    
+                    # References
+                    references = row.get('references', [])
+                    if references:
+                        ref_text = " | ".join([f"[Source {idx+1}]({ref})" for idx, ref in enumerate(references[:3])])
+                        st.caption(f"References: {ref_text}")
+                    
+                    if i < len(table_a):
+                        st.markdown("---")
+        
+        # Table B: Missing Topics
+        if table_b:
+            st.markdown("### ⚠️ Table B: Missing Topics to Add to Syllabus")
+            for i, row in enumerate(table_b, 1):
+                with st.container():
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.markdown(f"**{i}. {row.get('missing_topic', 'N/A')}**")
+                        if row.get('rationale'):
+                            st.caption(f"Rationale: {row.get('rationale')}")
+                        if row.get('suggested_syllabus_insertion'):
+                            st.caption(f"Suggested placement: {row.get('suggested_syllabus_insertion')}")
+                    with col2:
+                        priority = row.get('priority', 'N/A')
+                        priority_color = {'High': '🔴', 'Medium': '🟡', 'Low': '🟢'}.get(priority, '⚪')
+                        st.markdown(f"**Priority:** {priority_color} {priority}")
+                        st.caption(f"{row.get('frequency_in_jobs', 0)} jobs")
+                    
+                    # References
+                    references = row.get('references', [])
+                    if references:
+                        ref_text = " | ".join([f"[Source {idx+1}]({ref})" for idx, ref in enumerate(references[:3])])
+                        st.caption(f"References: {ref_text}")
+                    
+                    if i < len(table_b):
+                        st.markdown("---")
+    
     # Display chat history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             
-            # Show tool calls if any
-            if "tool_calls" in message:
-                with st.expander("🔧 Tool Calls"):
-                    st.json(message["tool_calls"])
-            
-            # Show tables if any
+            # Display tables if any (no tool calls shown)
             if "tables" in message and message["tables"]:
-                with st.expander("📊 Analysis Tables"):
-                    table_a = message["tables"].get("table_a", [])
-                    table_b = message["tables"].get("table_b", [])
-                    if table_a:
-                        st.write(f"**Table A:** {len(table_a)} rows")
-                    if table_b:
-                        st.write(f"**Table B:** {len(table_b)} rows")
+                display_analysis_tables(message["tables"])
     
     # Chat input
     if prompt := st.chat_input("Ask me to search for jobs or analyze gaps..."):
@@ -318,37 +372,20 @@ with tab4:
                         # Display response
                         st.markdown(result.get("response", ""))
                         
-                        # Store message with metadata
+                        # Store message with metadata (tool_calls stored but not displayed)
                         message_data = {
                             "role": "assistant",
                             "content": result.get("response", "")
                         }
                         
+                        # Store tool_calls for backend tracking but don't display to user
                         if result.get("tool_calls"):
                             message_data["tool_calls"] = result["tool_calls"]
-                            with st.expander("🔧 Tool Calls"):
-                                st.json(result["tool_calls"])
                         
+                        # Display tables nicely if present
                         if result.get("tables"):
                             message_data["tables"] = result["tables"]
-                            
-                            # Display tables inline
-                            tables = result["tables"]
-                            table_a = tables.get("table_a", [])
-                            table_b = tables.get("table_b", [])
-                            
-                            if table_a or table_b:
-                                st.subheader("📊 Analysis Results")
-                                
-                                if table_a:
-                                    st.write(f"**Table A - Viable Topics:** {len(table_a)} topics")
-                                    for row in table_a[:3]:  # Show first 3
-                                        st.write(f"- {row.get('syllabus_topic')} (Score: {row.get('industry_relevance_score')}%)")
-                                
-                                if table_b:
-                                    st.write(f"**Table B - Missing Topics:** {len(table_b)} topics")
-                                    for row in table_b[:3]:  # Show first 3
-                                        st.write(f"- {row.get('missing_topic')} (Priority: {row.get('priority')})")
+                            display_analysis_tables(result["tables"])
                         
                         st.session_state.messages.append(message_data)
                         st.rerun()  # Refresh UI to enable chat input again
