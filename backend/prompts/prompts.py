@@ -262,6 +262,8 @@ Use tools when users request:
 - Job search ("find jobs", "search for", "look for") -> use /search
 - Analysis or gap identification -> use /analyze
 
+IMPORTANT: If the user mentions they uploaded a PDF or asks about topics from their PDF, acknowledge that you have access to their uploaded document. You can reference the document and its extracted topics when answering questions. If they ask about topics, you can confirm that topics have been extracted from their uploaded PDF.
+
 Always be helpful and guide users through the process. Explain what you're doing when calling tools.
 """
 

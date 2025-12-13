@@ -14,6 +14,7 @@ class ChatResponse(BaseModel):
     """Response schema for /chat endpoint."""
     response: str = Field(..., description="Assistant response text")
     conversation_id: str = Field(..., description="Conversation ID")
+    document_id: Optional[str] = Field(None, description="Document ID if PDF was uploaded")
     tool_calls: Optional[List[Dict[str, Any]]] = Field(None, description="Tool calls made by agent")
     tables: Optional[Dict[str, Any]] = Field(None, description="Tables if analysis was performed")
 

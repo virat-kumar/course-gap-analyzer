@@ -217,6 +217,50 @@ with tab4:
     st.header("💬 Chat Interface")
     st.markdown("Interact with the system using natural language. The AI will automatically call search or analysis tools as needed.")
     
+    # PDF Upload in Chat - Always visible
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        uploaded_file = st.file_uploader("📄 Upload PDF here (drag & drop or browse)", type="pdf", key="chat_pdf_uploader", help="Upload a syllabus PDF to analyze")
+    with col2:
+        upload_button = st.button("Upload", type="primary", key="chat_upload_btn", disabled=(uploaded_file is None))
+    
+    # Handle PDF upload
+    if uploaded_file is not None and upload_button:
+        with st.spinner("Uploading PDF and extracting topics..."):
+            try:
+                # Reset file pointer
+                uploaded_file.seek(0)
+                files = {"file": (uploaded_file.name, uploaded_file.read(), "application/pdf")}
+                response = requests.post(f"{backend_url}/pdf", files=files, timeout=120)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    st.session_state.document_id = result["document_id"]
+                    
+                    # Initialize messages if needed
+                    if "messages" not in st.session_state:
+                        st.session_state.messages = []
+                    
+                    # Add user message about upload
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": f"I uploaded a PDF file: {uploaded_file.name}"
+                    })
+                    
+                    # Add assistant confirmation message
+                    upload_msg = f"✅ PDF uploaded successfully! I've extracted topics from your syllabus. Document ID: {result['document_id'][:8]}... Topics extracted: {result['topic_extract_status']}. You can now ask me to search for jobs or analyze gaps."
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": upload_msg
+                    })
+                    
+                    st.success("PDF uploaded! Check the chat below.")
+                    st.rerun()
+                else:
+                    st.error(f"Upload failed: {response.status_code} - {response.text}")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Error connecting to backend: {str(e)}")
+    
     # Chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []

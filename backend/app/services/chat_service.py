@@ -45,6 +45,7 @@ def handle_chat_message(message: str, conversation_id: Optional[str], document_i
     response = {
         "response": "",
         "conversation_id": conversation_id,
+        "document_id": document_id,  # Include document_id in response
         "tool_calls": None,
         "tables": None
     }
@@ -155,8 +156,17 @@ def handle_chat_message(message: str, conversation_id: Optional[str], document_i
     try:
         llm = get_llm_client()
         
+        # Build system prompt with document context if available
+        system_prompt = CHAT_SYSTEM_PROMPT
+        if document_id:
+            # Add document context to system prompt
+            from app.db.repositories.document_repo import get_document
+            doc = get_document(db, document_id)
+            if doc:
+                system_prompt += f"\n\nNOTE: The user has uploaded a syllabus PDF (Document ID: {document_id[:8]}...). Topics have been extracted from this document. You can reference this document when answering questions about the syllabus or topics."
+        
         # Build messages for LLM using langchain message format
-        langchain_messages = [SystemMessage(content=CHAT_SYSTEM_PROMPT)]
+        langchain_messages = [SystemMessage(content=system_prompt)]
         
         # Convert history to langchain messages
         for hist_msg in history:

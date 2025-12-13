@@ -37,6 +37,7 @@ async def chat(
         return ChatResponse(
             response=result["response"],
             conversation_id=result["conversation_id"],
+            document_id=result.get("document_id"),
             tool_calls=result.get("tool_calls"),
             tables=result.get("tables")
         )
