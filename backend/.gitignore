@@ -19,6 +19,10 @@ __pycache__/
 check_*.py
 debug_*.py
 
+# Test files
+test_*.py
+!test_data/
+
 # IDE
 .vscode/
 .idea/
