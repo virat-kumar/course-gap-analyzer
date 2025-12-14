@@ -24,3 +24,24 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary documentation files
+BACKEND_COMMANDS.md
+COMPLETE_SETUP.md
+FINAL_SETUP_STATUS.md
+FINAL_STATUS.md
+FIREWALL_FIX.md
+FRONTEND_COMMANDS.md
+QUICK_START.md
+SERVER_STARTUP_NOTES.md
+SERVER_STATUS.md
+SETUP_COMPLETE.md
+START_SERVERS.md
+SYSTEM_STATUS.md
+TESTING_CHECKLIST.md
+TESTING_STATUS.md
+
+# Test files
+test_*.py
+check_*.py
+debug_*.py
